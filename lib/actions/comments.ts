@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,5 +33,9 @@ export async function addComment(
 
   revalidatePath(`/items/${workItemId}`);
   revalidatePath("/items");
-  return null;
+  // Redirect (303) instead of returning a value: the no-JS progressive-enhancement
+  // path otherwise re-renders this authenticated page as the POST response, which
+  // hangs (see siblings create/update/delete — they all redirect). On the JS path
+  // this lands back on the same page with the new comment via the normal refresh.
+  redirect(`/items/${workItemId}`);
 }
