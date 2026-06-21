@@ -1,0 +1,58 @@
+name: claude-intake
+
+# Intake path (b): mention "@claude" in a GitHub issue or PR comment from your
+# phone and the implementer picks it up. Intake path (a) is the Claude mobile
+# app driving a cloud Code session directly — that needs no workflow.
+#
+# This runs the FULL implement <-> review loop in one session (see
+# docs/AGENT_PIPELINE.md): it must not be a two-workflow ping-pong, because
+# GitHub won't re-trigger workflows from GITHUB_TOKEN events.
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+# Only react to @claude from the repo owner, to avoid abuse / cost surprises.
+jobs:
+  implement:
+    if: >
+      contains(github.event.comment.body, '@claude') &&
+      github.event.comment.user.login == github.repository_owner
+    # Prefer your self-hosted runner; swap to `ubuntu-latest` and add tool setup
+    # steps if you don't want to maintain a host.
+    runs-on: self-hosted
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # IMPORTANT: use a PAT / GitHub App token, NOT the default GITHUB_TOKEN.
+          # A PR opened with GITHUB_TOKEN will NOT trigger ci.yml (GitHub's
+          # recursion guard), so the required `ci` check never posts and the PR
+          # can never satisfy branch protection. (Path a — the Claude mobile app —
+          # opens PRs as you, so it triggers CI normally; this only affects the
+          # @claude intake path.)
+          token: ${{ secrets.GH_PAT }}
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GH_PAT }}
+          trigger_phrase: "@claude"
+          # The persona/loop. The action injects the issue/PR context; this tells
+          # it to run the implementer workflow from prompts/implementer.md.
+          prompt: |
+            You are the implementer for this repo. Read and follow
+            prompts/implementer.md exactly, treating the triggering comment's
+            request as <TASK>. Use the pr-reviewer subagent
+            (.claude/agents/pr-reviewer.md) for the independent review loop. Open
+            a PR when (and only when) the reviewer returns PASS and build, lint,
+            and test are green. Do not merge.
+          claude_args: |
+            --model claude-opus-4-8
+            --max-turns 60
+            --allowedTools Edit,Read,Write,Bash,Grep,Glob,Task,WebFetch
