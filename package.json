@@ -2,6 +2,7 @@
   "name": "backlog-tracking",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.5.1",
   "scripts": {
     "dev": "NODE_OPTIONS=--max-old-space-size=4096 next dev",
     "build": "next build",
