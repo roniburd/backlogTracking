@@ -121,7 +121,7 @@ via CLI.
 
 | Secret | Used by | Notes |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | intake + self-hosted loop | or `CLAUDE_CODE_OAUTH_TOKEN` if using OAuth |
+| `CLAUDE_CODE_OAUTH_TOKEN` | `claude-intake.yml` | **Claude Pro/Max subscription auth** — generate with `claude setup-token` locally, no API key needed. Agent runs consume your subscription usage limits. (Alternative: `anthropic_api_key` if you ever want pay-per-use.) |
 | `GH_PAT` | `claude-intake.yml` | **fine-grained PAT or GitHub App token** with `contents:write` + `pull-requests:write`. Required so PRs the agent opens trigger `ci.yml` — the default `GITHUB_TOKEN` will NOT trigger it. |
 | `SUPABASE_ACCESS_TOKEN` | `deploy-prod.yml` | personal access token for the Supabase CLI |
 | `SUPABASE_DB_PASSWORD` | `deploy-prod.yml` | prod DB password for `db push` |
