@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/date-picker";
 import { profileName } from "@/lib/format";
 import type { ActionState } from "@/lib/actions/work-items";
 import type { Label as LabelRow, Profile, Status } from "@/lib/db";
@@ -145,11 +146,10 @@ export function WorkItemForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="target_date">Target date</Label>
-          <Input
+          <DatePicker
             id="target_date"
             name="target_date"
-            type="date"
-            defaultValue={defaults.target_date ?? ""}
+            defaultValue={defaults.target_date}
           />
         </div>
         <div className="space-y-1.5">
