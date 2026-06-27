@@ -1,108 +1,119 @@
 "use client";
 
 import * as React from "react";
+import {
+  DayButton,
+  DayPicker,
+  getDefaultClassNames,
+} from "react-day-picker";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  addMonths,
-  buildMonthMatrix,
-  monthName,
-  parseISODate,
-  todayISO,
-  WEEKDAY_LABELS,
-} from "@/lib/calendar";
+import { buttonVariants } from "@/components/ui/button";
 
 /**
- * A month-grid calendar. Controlled by `value` (an ISO `YYYY-MM-DD` string or
- * null); calls `onSelect` with the clicked day's ISO string. The displayed
- * month tracks the selected value but the user can page through months freely.
+ * Month-grid calendar — a thin wrapper over `react-day-picker`, styled to the
+ * design system. We deliberately do not hand-roll the grid math, month paging,
+ * keyboard navigation, or accessibility: the library has already hardened all
+ * of that, and we need no customization beyond styling. See CLAUDE.md on when a
+ * battle-tested dependency is the lower-liability choice over reimplementing it.
  */
-export function Calendar({
-  value,
-  onSelect,
+function Calendar({
   className,
-}: {
-  value: string | null;
-  onSelect: (iso: string) => void;
-  className?: string;
-}) {
-  const selected = parseISODate(value);
-  const today = todayISO();
-
-  // Initialize the visible month from the selected value, else today.
-  const initial = selected ?? new Date();
-  const [view, setView] = React.useState({
-    year: initial.getFullYear(),
-    monthIndex: initial.getMonth(),
-  });
-
-  const weeks = buildMonthMatrix(view.year, view.monthIndex);
+  classNames,
+  showOutsideDays = true,
+  ...props
+}: React.ComponentProps<typeof DayPicker>) {
+  const defaults = getDefaultClassNames();
 
   return (
-    <div className={cn("w-64 select-none p-3", className)}>
-      <div className="flex items-center justify-between pb-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Previous month"
-          onClick={() => setView((v) => addMonths(v.year, v.monthIndex, -1))}
-        >
-          <ChevronLeftIcon />
-        </Button>
-        <div className="text-sm font-medium" aria-live="polite">
-          {monthName(view.monthIndex)} {view.year}
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Next month"
-          onClick={() => setView((v) => addMonths(v.year, v.monthIndex, 1))}
-        >
-          <ChevronRightIcon />
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-7 gap-0.5 text-center text-xs text-muted-foreground">
-        {WEEKDAY_LABELS.map((d) => (
-          <div key={d} className="py-1 font-normal">
-            {d}
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-0.5">
-        {weeks.flat().map((cell) => {
-          const isSelected = value === cell.iso;
-          const isToday = today === cell.iso;
-          return (
-            <button
-              key={cell.iso}
-              type="button"
-              onClick={() => onSelect(cell.iso)}
-              aria-pressed={isSelected}
-              aria-current={isToday ? "date" : undefined}
-              className={cn(
-                "flex size-8 items-center justify-center rounded-md text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
-                cell.inCurrentMonth
-                  ? "text-foreground"
-                  : "text-muted-foreground/50",
-                !isSelected && "hover:bg-muted",
-                isToday &&
-                  !isSelected &&
-                  "font-medium ring-1 ring-inset ring-border",
-                isSelected &&
-                  "bg-primary font-medium text-primary-foreground hover:bg-primary/80",
-              )}
-            >
-              {cell.day}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <DayPicker
+      showOutsideDays={showOutsideDays}
+      className={cn("p-3", className)}
+      classNames={{
+        root: cn("w-fit", defaults.root),
+        months: cn("relative flex flex-col gap-4", defaults.months),
+        month: cn("flex w-full flex-col gap-4", defaults.month),
+        nav: cn(
+          "absolute inset-x-0 top-0 flex items-center justify-between",
+          defaults.nav,
+        ),
+        button_previous: cn(
+          buttonVariants({ variant: "ghost", size: "icon-sm" }),
+          defaults.button_previous,
+        ),
+        button_next: cn(
+          buttonVariants({ variant: "ghost", size: "icon-sm" }),
+          defaults.button_next,
+        ),
+        month_caption: cn(
+          "flex h-7 items-center justify-center px-8",
+          defaults.month_caption,
+        ),
+        caption_label: cn("text-sm font-medium", defaults.caption_label),
+        weekdays: cn("flex", defaults.weekdays),
+        weekday: cn(
+          "w-8 text-[0.8rem] font-normal text-muted-foreground",
+          defaults.weekday,
+        ),
+        week: cn("mt-1 flex w-full", defaults.week),
+        day: cn("size-8 p-0 text-center text-sm", defaults.day),
+        today: cn(
+          "rounded-md font-medium ring-1 ring-inset ring-border data-[selected=true]:ring-0",
+          defaults.today,
+        ),
+        outside: cn("text-muted-foreground/50", defaults.outside),
+        disabled: cn("text-muted-foreground/30", defaults.disabled),
+        hidden: cn("invisible", defaults.hidden),
+        ...classNames,
+      }}
+      components={{
+        Chevron: ({ orientation, className: chevronClassName }) =>
+          orientation === "left" ? (
+            <ChevronLeftIcon className={cn("size-4", chevronClassName)} />
+          ) : (
+            <ChevronRightIcon className={cn("size-4", chevronClassName)} />
+          ),
+        DayButton: CalendarDayButton,
+      }}
+      {...props}
+    />
   );
 }
+
+/**
+ * A single day cell. Styled with the shared button variants so days match the
+ * rest of the UI; the effect keeps keyboard focus on the day the library marks
+ * as focused, which is how arrow-key navigation stays visible.
+ */
+function CalendarDayButton({
+  className,
+  day,
+  modifiers,
+  ...props
+}: React.ComponentProps<typeof DayButton>) {
+  const ref = React.useRef<HTMLButtonElement>(null);
+  React.useEffect(() => {
+    if (modifiers.focused) ref.current?.focus();
+  }, [modifiers.focused]);
+
+  void day; // provided by the library; not needed beyond styling/modifiers.
+
+  return (
+    <button
+      ref={ref}
+      data-selected={modifiers.selected || undefined}
+      className={cn(
+        buttonVariants({
+          variant: modifiers.selected ? "default" : "ghost",
+          size: "icon-sm",
+        }),
+        "size-8 font-normal",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export { Calendar };

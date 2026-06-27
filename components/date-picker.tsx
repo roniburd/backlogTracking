@@ -7,13 +7,15 @@ import { CalendarIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { formatISODateLong, isValidISODate } from "@/lib/calendar";
+import { formatISODateLong, parseISODate, toISODate } from "@/lib/calendar";
 
 /**
  * A calendar date picker that posts its value through a hidden input, so it is
  * a drop-in replacement for `<input type="date" name=... />` inside a form. The
- * value is an ISO `YYYY-MM-DD` string (empty when cleared), exactly what the
- * Server Action already expects for an optional date column.
+ * submitted value is an ISO `YYYY-MM-DD` string (empty when cleared), exactly
+ * what the Server Action already expects for an optional date column. The
+ * calendar itself works in `Date` objects; this component is the boundary that
+ * converts to/from the ISO string the form contract uses.
  */
 export function DatePicker({
   name,
@@ -24,17 +26,18 @@ export function DatePicker({
   id?: string;
   defaultValue?: string | null;
 }) {
-  const [value, setValue] = React.useState(
-    isValidISODate(defaultValue) ? defaultValue! : "",
+  const [date, setDate] = React.useState<Date | undefined>(
+    () => parseISODate(defaultValue) ?? undefined,
   );
   const [open, setOpen] = React.useState(false);
 
-  const label = value ? formatISODateLong(value) : "Pick a date";
+  const iso = date ? toISODate(date) : "";
+  const label = iso ? formatISODateLong(iso) : "Pick a date";
 
   return (
     <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
       {/* Submitted with the form; the visible control below is presentational. */}
-      <input type="hidden" name={name} value={value} />
+      <input type="hidden" name={name} value={iso} />
 
       <PopoverPrimitive.Trigger
         render={
@@ -44,7 +47,7 @@ export function DatePicker({
             variant="outline"
             className={cn(
               "w-full justify-between font-normal",
-              !value && "text-muted-foreground",
+              !date && "text-muted-foreground",
             )}
           />
         }
@@ -59,13 +62,16 @@ export function DatePicker({
             className="z-50 origin-(--transform-origin) rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
           >
             <Calendar
-              value={value || null}
-              onSelect={(iso) => {
-                setValue(iso);
-                setOpen(false);
+              mode="single"
+              selected={date}
+              defaultMonth={date}
+              onSelect={(next) => {
+                setDate(next);
+                if (next) setOpen(false);
               }}
+              autoFocus
             />
-            {value && (
+            {date && (
               <div className="border-t p-2">
                 <Button
                   type="button"
@@ -73,7 +79,7 @@ export function DatePicker({
                   size="sm"
                   className="w-full justify-center text-muted-foreground"
                   onClick={() => {
-                    setValue("");
+                    setDate(undefined);
                     setOpen(false);
                   }}
                 >
