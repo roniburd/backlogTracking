@@ -39,9 +39,19 @@ pnpm test     # run the test suite
   before and passes after. Test behavior and edges, not implementation details.
 - **Make it correct, then clear, then fast.** Don't optimize without a measured
   reason; readability is the default priority.
-- **Prefer the platform over a dependency.** Reach for a new package only when
-  the standard library / framework genuinely can't do it. Every dependency is a
-  long-term liability.
+- **Prefer the platform over a dependency — but don't reinvent a hard, solved
+  wheel.** Reach for a new package only when the standard library / framework
+  genuinely can't do it *and* the thing you'd otherwise write is small and fully
+  in your control (a string helper, a bit of date math). The flip side matters
+  just as much: when the need is a complex, well-solved, *no-customization*
+  component — a date-picker calendar, a rich-text editor, drag-and-drop — a
+  mature, battle-tested library is the **lower**-liability choice. Hand-rolling
+  it means owning the accessibility, keyboard handling, i18n, and edge cases the
+  library already got right, and getting them subtly wrong. The test: *is this a
+  thin convenience I can write in a few tested lines (write it), or non-trivial
+  behavior the ecosystem has already hardened (take the dep)?* Every dependency
+  is still a long-term liability — choose deliberately, not by reflex in either
+  direction.
 - **Fail loudly.** Validate inputs at the boundary; don't swallow errors. Handle
   the error or propagate it — never silently `catch {}`.
 - **Types are the contract.** No `any` as an escape hatch. Let inference work;
