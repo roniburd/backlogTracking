@@ -19,9 +19,9 @@ jobs:
     if: >
       contains(github.event.comment.body, '@claude') &&
       github.event.comment.user.login == github.repository_owner
-    # Prefer your self-hosted runner; swap to `ubuntu-latest` and add tool setup
-    # steps if you don't want to maintain a host.
-    runs-on: self-hosted
+    # GitHub-hosted runner (no machine to maintain). The setup steps below give
+    # the agent the toolchain it needs for its build/lint/test loop.
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       issues: write
@@ -37,6 +37,13 @@ jobs:
           # opens PRs as you, so it triggers CI normally; this only affects the
           # @claude intake path.)
           token: ${{ secrets.GH_PAT }}
+
+      # Toolchain for the agent's internal gates (pnpm build/lint/test).
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
 
       - uses: anthropics/claude-code-action@v1
         with:
