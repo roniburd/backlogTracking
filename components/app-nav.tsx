@@ -17,9 +17,13 @@ export function AppNav({ email, isAdmin }: { email: string; isAdmin: boolean }) 
     : LINKS;
 
   return (
-    <header className="sticky top-0 z-10 border-b bg-background">
-      <div className="mx-auto flex h-12 max-w-6xl items-center gap-1 px-4">
-        <Link href="/dashboard" className="mr-4 text-sm font-semibold">
+    <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-1 px-4">
+        <Link
+          href="/dashboard"
+          className="mr-4 flex items-center gap-2 text-[15px] font-bold tracking-tight"
+        >
+          <span className="size-2 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
           Backlog
         </Link>
         <nav className="flex items-center gap-1">
@@ -31,8 +35,8 @@ export function AppNav({ email, isAdmin }: { email: string; isAdmin: boolean }) 
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "rounded px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground",
-                  active && "bg-muted font-medium text-foreground",
+                  "rounded-md px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
+                  active && "bg-secondary font-semibold text-foreground",
                 )}
               >
                 {link.label}
@@ -47,7 +51,7 @@ export function AppNav({ email, isAdmin }: { email: string; isAdmin: boolean }) 
           <form action="/auth/signout" method="post">
             <button
               type="submit"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Sign out
             </button>
