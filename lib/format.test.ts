@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { profileName } from "@/lib/format";
+import { profileName, truncate } from "@/lib/format";
 
 // Seed test that also documents the intended fallback chain for profileName.
 describe("profileName", () => {
@@ -19,5 +19,23 @@ describe("profileName", () => {
     expect(
       profileName({ full_name: "", email: "", id: "abcd1234ef5678" }),
     ).toBe("abcd1234");
+  });
+});
+
+describe("truncate", () => {
+  it("returns text unchanged when shorter than max", () => {
+    expect(truncate("hi", 5)).toBe("hi");
+  });
+
+  it("returns text unchanged when exactly max", () => {
+    expect(truncate("hello", 5)).toBe("hello");
+  });
+
+  it("keeps max-1 characters plus an ellipsis when longer than max", () => {
+    expect(truncate("hello world", 5)).toBe("hell…");
+  });
+
+  it("collapses to just an ellipsis when max is 1", () => {
+    expect(truncate("hello", 1)).toBe("…");
   });
 });
