@@ -47,9 +47,9 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-3 rounded-lg border p-4">
+    <section className="space-y-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-white/15">
       <div>
-        <h2 className="text-sm font-semibold">{title}</h2>
+        <h2 className="text-[13px] font-semibold">{title}</h2>
         {description && (
           <p className="text-xs text-muted-foreground">{description}</p>
         )}
@@ -92,12 +92,16 @@ export function AdminClient({
           {statuses.map((s) => (
             <li key={s.id} className="flex items-center gap-2 py-2 text-sm">
               <span className={cn("size-2 rounded-full", statusDot(s.color))} />
-              <span className="flex-1">{s.label}</span>
+              <span className="flex-1 font-medium">{s.label}</span>
               {s.is_attention && (
-                <span className="text-xs text-orange-600">attention</span>
+                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-400">
+                  attention
+                </span>
               )}
               {s.is_terminal && (
-                <span className="text-xs text-muted-foreground">terminal</span>
+                <span className="rounded-full bg-blue-500/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-400">
+                  terminal
+                </span>
               )}
               <span className="w-6 text-right text-xs text-muted-foreground">
                 {s.sort_order}
@@ -165,7 +169,7 @@ export function AdminClient({
           {labels.map((l) => (
             <span
               key={l.id}
-              className="inline-flex items-center gap-1.5 rounded-full border py-1 pl-3 pr-1.5 text-sm"
+              className="inline-flex items-center gap-1.5 rounded-full border border-input bg-secondary py-1 pl-3 pr-1.5 text-sm"
             >
               <span className={cn("size-2 rounded-full", statusDot(l.color))} />
               {l.name}
@@ -230,7 +234,7 @@ export function AdminClient({
                   )}
                 </span>
                 {u.is_admin && (
-                  <span className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--primary-bright)]">
                     admin
                   </span>
                 )}

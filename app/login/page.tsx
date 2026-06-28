@@ -16,10 +16,13 @@ export default function LoginPage() {
   );
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-muted/30 p-4">
-      <div className="w-full max-w-sm space-y-6 rounded-lg border bg-background p-6 shadow-sm">
+    <main className="flex min-h-dvh items-center justify-center bg-background p-4">
+      <div className="w-full max-w-sm space-y-6 rounded-2xl border border-border bg-card p-6 shadow-xl shadow-black/30">
         <div className="space-y-1">
-          <h1 className="text-lg font-semibold">Backlog Tracker</h1>
+          <h1 className="flex items-center gap-2 text-lg font-bold tracking-tight">
+            <span className="size-2 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
+            Backlog Tracker
+          </h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signin"
               ? "Sign in to your workspace."

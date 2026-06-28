@@ -50,7 +50,10 @@ export default async function ItemsPage({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Work items</h1>
+        <div>
+          <h1 className="text-[22px] font-bold tracking-tight">Work items</h1>
+          <div className="mt-2 h-[3px] w-8 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
+        </div>
         <Button size="sm" render={<Link href="/items/new" />}>
           New item
         </Button>

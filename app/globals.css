@@ -1,26 +1,86 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+/*
+ * Design tokens — dark "Backlog" theme (indigo-violet accent).
+ * Values feed the shadcn/ui component contract via @theme inline below.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+
+  --radius: 0.75rem; /* 12px base; cards round to ~14px, controls to ~10px */
+
+  /* Surfaces */
+  --background: #0d0d12;
+  --foreground: #e8e8f0;
+  --card: #14141c;
+  --card-foreground: #e8e8f0;
+  --popover: #1c1c28;
+  --popover-foreground: #e8e8f0;
+
+  /* Brand / interactive */
+  --primary: #7c6afa;
+  --primary-foreground: #ffffff;
+  --secondary: #1c1c28;
+  --secondary-foreground: #e8e8f0;
+  --muted: #1c1c28;
+  --muted-foreground: #9898b0;
+  --accent: #1c1c28;
+  --accent-foreground: #e8e8f0;
+  --destructive: #ff5d5d;
+  --destructive-foreground: #ffffff;
+
+  /* Lines & focus */
+  --border: rgba(255, 255, 255, 0.09);
+  --input: rgba(255, 255, 255, 0.14);
+  --ring: #7c6afa;
+
+  /* Secondary brand shade used for hover/glow accents */
+  --primary-bright: #a695ff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  *,
+  ::after,
+  ::before {
+    border-color: var(--color-border);
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
+      "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
 }

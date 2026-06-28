@@ -27,9 +27,10 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold">Admin</h1>
-        <p className="text-sm text-muted-foreground">
+      <div className="pb-1">
+        <h1 className="text-[22px] font-bold tracking-tight">Admin</h1>
+        <div className="mt-2 h-[3px] w-8 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
+        <p className="mt-3 text-[13px] text-muted-foreground">
           Manage statuses, labels, users, and team views.
         </p>
       </div>
