@@ -100,6 +100,11 @@ the database, so RLS evaluates against the real user.
 - **Every push gets a preview deployment.** Treat preview URLs as the place to
   verify a change end-to-end before it's promoted. Production should only ever
   receive code that passed on a preview.
+- **Production deploys are smoke-checked.** After `deploy-prod.yml` deploys, it
+  polls the new deployment's `/api/health` endpoint (which round-trips to
+  Postgres) before the job is allowed to go green. A failed check fails the job
+  to alert you; it does not roll back (expand/contract migrations keep the prior
+  code working in the meantime).
 - **Environment variables are managed per environment** (production / preview /
   development) in the hosting provider, mirrored locally via the provider's CLI
   or `.env.local`. Changing an env var is a deploy-time concern — a running

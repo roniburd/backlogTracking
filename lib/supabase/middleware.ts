@@ -3,7 +3,8 @@ import { createServerClient } from "@supabase/ssr";
 
 import type { Database } from "@/lib/types";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+// `/api/health` is the unauthenticated smoke-check probe used by deploy-prod.yml.
+const PUBLIC_PATHS = ["/login", "/auth", "/api/health"];
 
 /**
  * Refreshes the Supabase auth session on every request and guards app routes.

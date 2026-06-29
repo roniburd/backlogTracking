@@ -50,6 +50,7 @@ automation in `.github/workflows/`.
                  │   gated by "production" Environment           │
                  │   a) supabase db push   (migrations FIRST)    │
                  │   b) vercel deploy --prod (code SECOND)       │
+                 │   c) smoke-check /api/health (alert-only)     │
                  └─────────────────────────────────────────────┘
 ```
 
@@ -95,6 +96,14 @@ migration step. That is a race: new code can go live before its migration runs.
    migrations** so that even within the window, old code tolerates the new
    schema. Destructive changes (drop column/table) must ship in a *later* PR,
    after the code that depended on them is gone.
+4. After the deploy, the workflow **smoke-checks the deployment URL** by polling
+   `/api/health` (a route that round-trips to Postgres) with backoff. `vercel
+   deploy` exiting 0 only means the deployment was *created* — the smoke check is
+   what proves the live app actually serves against the just-migrated schema. A
+   non-200 fails the job so the red run alerts you. This is **alert-only**: there
+   is no automated rollback, which is safe precisely because of the
+   expand/contract rule above — the previous code keeps working against the new
+   schema while you decide what to do.
 
 ## What enforces the human gate
 
