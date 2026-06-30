@@ -6,10 +6,14 @@ describe("safeInternalPath", () => {
     expect(safeInternalPath("/items", "/fallback")).toBe("/items");
   });
 
-  it("preserves the query string and hash", () => {
+  it("preserves the query string", () => {
     expect(safeInternalPath("/items?status=open,done&q=api", "/fallback")).toBe(
       "/items?status=open,done&q=api",
     );
+  });
+
+  it("preserves a fragment/hash", () => {
+    expect(safeInternalPath("/items#row-3", "/fallback")).toBe("/items#row-3");
   });
 
   it("trims surrounding whitespace before validating", () => {
