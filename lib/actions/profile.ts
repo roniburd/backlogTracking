@@ -51,15 +51,16 @@ export async function updateProfile(
     emailPending = true;
   }
 
-  // The friendly name appears in the nav and the items owner columns; refresh
-  // the places that read it.
+  // The friendly name appears in the nav, the items list, and item detail owner
+  // columns; refresh the places that read it.
   revalidatePath("/profile");
   revalidatePath("/items");
+  revalidatePath("/items/[id]", "page");
 
   return {
     ok: true,
     message: emailPending
-      ? "Saved. Check your new email inbox to confirm the address change."
+      ? "Saved. Check your email to confirm the address change before it takes effect."
       : "Profile saved.",
   };
 }

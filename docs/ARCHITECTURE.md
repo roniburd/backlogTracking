@@ -74,6 +74,14 @@ the database, so RLS evaluates against the real user.
   used only for trusted backend tasks (admin jobs, migrations, system processes)
   — **never** for user-initiated requests. Treating it as a convenience is how
   data leaks and authorization holes get introduced.
+- **Identity lives in `auth.users`; `profiles` mirrors it.** `auth.users` owns a
+  user's email and password — change email through `auth.updateUser`, never by
+  writing the `profiles` row directly (the column grant only lets a user update
+  their own `full_name`). `profiles.email` is a *denormalized copy* the read
+  paths join against (the items view, owner columns); SECURITY DEFINER triggers
+  keep it in sync — `handle_new_user` on signup, `sync_profile_email` on a
+  confirmed email change. If you add a path that needs the user's email, read the
+  profile copy and trust the triggers to keep it current.
 
 ## Database changes (migrations)
 
