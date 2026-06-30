@@ -10,7 +10,15 @@ const LINKS = [
   { href: "/items", label: "Items" },
 ];
 
-export function AppNav({ email, isAdmin }: { email: string; isAdmin: boolean }) {
+export function AppNav({
+  name,
+  email,
+  isAdmin,
+}: {
+  name: string;
+  email: string;
+  isAdmin: boolean;
+}) {
   const pathname = usePathname();
   const links = isAdmin
     ? [...LINKS, { href: "/admin", label: "Admin" }]
@@ -45,9 +53,17 @@ export function AppNav({ email, isAdmin }: { email: string; isAdmin: boolean }) 
           })}
         </nav>
         <div className="ml-auto flex items-center gap-3">
-          <span className="hidden text-xs text-muted-foreground sm:inline">
-            {email}
-          </span>
+          <Link
+            href="/profile"
+            title={email}
+            className={cn(
+              "hidden max-w-[12rem] truncate rounded-md px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:inline-block",
+              (pathname === "/profile" || pathname.startsWith("/profile/")) &&
+                "bg-secondary font-semibold text-foreground",
+            )}
+          >
+            {name}
+          </Link>
           <form action="/auth/signout" method="post">
             <button
               type="submit"

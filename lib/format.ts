@@ -2,7 +2,20 @@ import type { Profile } from "@/lib/db";
 
 /** Display name for a profile, falling back to email then a short id. */
 export function profileName(p: Pick<Profile, "full_name" | "email" | "id">) {
-  return p.full_name || p.email || p.id.slice(0, 8);
+  return p.full_name?.trim() || p.email?.trim() || p.id.slice(0, 8);
+}
+
+/**
+ * Display label for a person referenced only by name + email — e.g. the owner
+ * columns of `work_items_view`, which expose names and emails but no profile id.
+ * Prefers the friendly name, falls back to the email, and finally to an em dash
+ * when neither is set. A whitespace-only name is treated as absent.
+ */
+export function ownerLabel(
+  name: string | null | undefined,
+  email: string | null | undefined,
+): string {
+  return name?.trim() || email?.trim() || "—";
 }
 
 /**
