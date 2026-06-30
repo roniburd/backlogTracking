@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { InlineStatus } from "@/components/inline-status";
 import { SortHeader } from "@/components/sort-header";
+import { ownerLabel } from "@/lib/format";
 import type { Status, WorkItemRow } from "@/lib/db";
 
 function fmtDate(d: string | null) {
@@ -93,14 +94,23 @@ export function ItemsTable({
                   statuses={statuses}
                 />
               </TableCell>
-              <TableCell className="text-muted-foreground">
-                {r.pm_name ?? r.pm_email ?? "—"}
+              <TableCell
+                className="text-muted-foreground"
+                title={r.pm_email ?? undefined}
+              >
+                {ownerLabel(r.pm_name, r.pm_email)}
               </TableCell>
-              <TableCell className="text-muted-foreground">
-                {r.tech_lead_name ?? r.tech_lead_email ?? "—"}
+              <TableCell
+                className="text-muted-foreground"
+                title={r.tech_lead_email ?? undefined}
+              >
+                {ownerLabel(r.tech_lead_name, r.tech_lead_email)}
               </TableCell>
-              <TableCell className="text-muted-foreground">
-                {r.sdm_name ?? r.sdm_email ?? "—"}
+              <TableCell
+                className="text-muted-foreground"
+                title={r.sdm_email ?? undefined}
+              >
+                {ownerLabel(r.sdm_name, r.sdm_email)}
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {r.target_date ? (

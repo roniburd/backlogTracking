@@ -18,13 +18,20 @@ export default async function AppLayout({
 
   const { data: me } = await supabase
     .from("profiles")
-    .select("is_admin")
+    .select("full_name, is_admin")
     .eq("id", user.id)
     .maybeSingle();
 
+  // Friendly name, falling back to email so the nav is never blank.
+  const name = me?.full_name?.trim() || user.email || "";
+
   return (
     <div className="min-h-dvh">
-      <AppNav email={user.email ?? ""} isAdmin={me?.is_admin ?? false} />
+      <AppNav
+        name={name}
+        email={user.email ?? ""}
+        isAdmin={me?.is_admin ?? false}
+      />
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
     </div>
   );
