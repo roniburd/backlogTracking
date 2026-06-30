@@ -20,6 +20,21 @@ export function isOwnerField(value: string): value is OwnerField {
 }
 
 /**
+ * The values the `work_items.date_type` column accepts (matching the DB check
+ * constraint). Like {@link OWNER_FIELDS}, this is an allowlist the inline-edit
+ * Server Action validates against so an untrusted caller can't write an
+ * arbitrary type string.
+ */
+export const DATE_TYPES = ["DFD", "ECD"] as const;
+
+export type DateType = (typeof DATE_TYPES)[number];
+
+/** Narrow an untrusted string to a valid date type. */
+export function isDateType(value: string): value is DateType {
+  return (DATE_TYPES as readonly string[]).includes(value);
+}
+
+/**
  * Suggestions for the inline label editor's autocomplete. Returns labels whose
  * name contains `query` (case-insensitive), excluding ones already attached, in
  * the input order (the catalog is fetched sorted by name) and capped at `limit`.

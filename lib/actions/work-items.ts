@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { isOwnerField, type OwnerField } from "@/lib/inline-edit";
+import { parseISODate } from "@/lib/calendar";
+import { isDateType, isOwnerField, type OwnerField } from "@/lib/inline-edit";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
 import { duplicateWorkItemFields } from "@/lib/work-items";
@@ -236,6 +237,51 @@ export async function setWorkItemOwner(
   const { error } = await supabase
     .from("work_items")
     .update(update)
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/items");
+  return null;
+}
+
+/**
+ * Inline description (title) change from the table view. The description is
+ * required, so a blank value is rejected rather than written.
+ */
+export async function setWorkItemDescription(
+  id: string,
+  description: string,
+): Promise<ActionState> {
+  const trimmed = description.trim();
+  if (trimmed === "") return { error: "Description is required." };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("work_items")
+    .update({ description: trimmed })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/items");
+  return null;
+}
+
+/**
+ * Inline target-date change from the table view. Both inputs are untrusted:
+ * the date must be a real `YYYY-MM-DD` value and the type one of the allowed
+ * codes, mirroring the DB constraints. An empty string clears either field.
+ */
+export async function setWorkItemDate(
+  id: string,
+  targetDate: string,
+  dateType: string,
+): Promise<ActionState> {
+  const date = targetDate === "" ? null : targetDate;
+  if (date !== null && !parseISODate(date)) return { error: "Invalid date." };
+  const type = dateType === "" ? null : dateType;
+  if (type !== null && !isDateType(type)) return { error: "Invalid date type." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("work_items")
+    .update({ target_date: date, date_type: type })
     .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/items");

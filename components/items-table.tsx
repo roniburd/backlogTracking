@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRightIcon } from "lucide-react";
 
 import {
   Table,
@@ -8,21 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { InlineDate } from "@/components/inline-date";
 import { InlineLabels } from "@/components/inline-labels";
 import { InlineSelect, type InlineOption } from "@/components/inline-select";
+import { InlineText } from "@/components/inline-text";
 import { SortHeader } from "@/components/sort-header";
 import { profileName } from "@/lib/format";
 import type { Label, Profile, Status, WorkItemRow } from "@/lib/db";
 import type { OwnerField } from "@/lib/inline-edit";
-
-function fmtDate(d: string | null) {
-  if (!d) return "—";
-  return new Date(d + "T00:00:00").toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 function relativeDays(iso: string | null) {
   if (!iso) return "—";
@@ -108,17 +102,23 @@ export function ItemsTable({
                 {r.stack_rank}
               </TableCell>
               <TableCell>
-                <Link
-                  href={`/items/${r.id}`}
-                  className="font-medium hover:underline"
-                >
-                  {r.description}
-                </Link>
-                {r.latest_update && (
-                  <p className="truncate text-xs text-muted-foreground">
-                    {r.latest_update}
-                  </p>
-                )}
+                <div className="flex items-start gap-1">
+                  <div className="min-w-0 flex-1">
+                    <InlineText itemId={r.id!} value={r.description ?? ""} />
+                    {r.latest_update && (
+                      <p className="truncate px-1 text-xs text-muted-foreground">
+                        {r.latest_update}
+                      </p>
+                    )}
+                  </div>
+                  <Link
+                    href={`/items/${r.id}`}
+                    aria-label="Open item"
+                    className="mt-0.5 shrink-0 rounded p-1 text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-[2px] focus-visible:ring-ring/50"
+                  >
+                    <ArrowUpRightIcon className="size-4" />
+                  </Link>
+                </div>
               </TableCell>
               <TableCell>
                 <InlineSelect
@@ -141,17 +141,12 @@ export function ItemsTable({
               <TableCell title={r.sdm_email ?? undefined}>
                 {ownerCell(r, "sdm_owner")}
               </TableCell>
-              <TableCell className="text-muted-foreground">
-                {r.target_date ? (
-                  <span>
-                    {fmtDate(r.target_date)}
-                    {r.date_type && (
-                      <span className="ml-1 text-xs">({r.date_type})</span>
-                    )}
-                  </span>
-                ) : (
-                  "—"
-                )}
+              <TableCell>
+                <InlineDate
+                  itemId={r.id!}
+                  date={r.target_date}
+                  dateType={r.date_type}
+                />
               </TableCell>
               <TableCell>
                 <InlineLabels
