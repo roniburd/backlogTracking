@@ -5,8 +5,22 @@ import { redirect } from "next/navigation";
 
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
+import { duplicateWorkItemFields } from "@/lib/work-items";
 
 export type ActionState = { error: string } | null;
+
+/** Stack rank that places a new item at the bottom of the current backlog. */
+async function nextStackRank(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<number> {
+  const { data: top } = await supabase
+    .from("work_items")
+    .select("stack_rank")
+    .order("stack_rank", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (top?.stack_rank ?? 0) + 1;
+}
 
 /** Empty string -> null; used for optional uuid/date/text fields. */
 function nullable(v: FormDataEntryValue | null): string | null {
@@ -71,16 +85,7 @@ export async function createWorkItem(
   const supabase = await createClient();
 
   // New items go to the bottom of the stack rank unless one was provided.
-  let stackRank = fields.stack_rank;
-  if (stackRank === null) {
-    const { data: top } = await supabase
-      .from("work_items")
-      .select("stack_rank")
-      .order("stack_rank", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    stackRank = (top?.stack_rank ?? 0) + 1;
-  }
+  const stackRank = fields.stack_rank ?? (await nextStackRank(supabase));
 
   const { data, error } = await supabase
     .from("work_items")
@@ -129,6 +134,49 @@ export async function deleteWorkItem(id: string): Promise<void> {
   await supabase.from("work_items").delete().eq("id", id);
   revalidatePath("/items");
   redirect("/items");
+}
+
+/**
+ * Duplicate a work item into a fresh copy that can be reused as a template.
+ * The copy carries over the item's fields and labels but not its comments or
+ * history (see `duplicateWorkItemFields`). Lands the user on the new item's
+ * edit page so they can tweak it.
+ */
+export async function duplicateWorkItem(id: string): Promise<void> {
+  const supabase = await createClient();
+
+  const { data: source, error: readError } = await supabase
+    .from("work_items")
+    .select(
+      "description, status_id, pm_owner, tech_lead_owner, sdm_owner, target_date, date_type",
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (readError) throw new Error(`Failed to read item: ${readError.message}`);
+  if (!source) throw new Error("Item not found.");
+
+  const { data, error } = await supabase
+    .from("work_items")
+    .insert({
+      ...duplicateWorkItemFields(source),
+      stack_rank: await nextStackRank(supabase),
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(`Failed to duplicate item: ${error.message}`);
+
+  // Carry over the labels; comments are intentionally not copied.
+  const { data: sourceLabels } = await supabase
+    .from("work_item_labels")
+    .select("label_id")
+    .eq("work_item_id", id);
+  const labelIds = (sourceLabels ?? []).map((l) => l.label_id);
+  if (labelIds.length) await syncLabels(supabase, data.id, labelIds);
+
+  revalidatePath("/items");
+  redirect(`/items/${data.id}`);
 }
 
 /** Inline status change from the table view. */
