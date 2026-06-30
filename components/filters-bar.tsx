@@ -148,6 +148,10 @@ export function FiltersBar({
             {s.label}
           </Chip>
         ))}
+        <span className="mx-1 h-4 w-px bg-border" aria-hidden />
+        <Chip active={f.stale} onClick={() => setF({ ...f, stale: !f.stale })}>
+          Needs update
+        </Chip>
       </div>
 
       {labels.length > 0 && (

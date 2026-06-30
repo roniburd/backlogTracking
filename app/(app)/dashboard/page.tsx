@@ -3,14 +3,8 @@ import Link from "next/link";
 import { statusDot } from "@/lib/status-color";
 import { createClient } from "@/lib/supabase/server";
 import type { Status, WorkItemRow } from "@/lib/db";
+import { STALE_DAYS, isStale } from "@/lib/stale";
 import { cn } from "@/lib/utils";
-
-const STALE_DAYS = 14;
-
-function isStale(iso: string | null) {
-  if (!iso) return false;
-  return Date.now() - new Date(iso).getTime() > STALE_DAYS * 86_400_000;
-}
 
 const ICON_TONE = {
   amber: "bg-amber-500/15 text-amber-400",
@@ -170,6 +164,7 @@ export default async function DashboardPage() {
   const team = (saved ?? []).filter((q) => q.scope === "team");
 
   const mineHref = `/items?owner=${me}`;
+  const staleHref = `${mineHref}&stale=1`;
   const attentionHref =
     attentionIds.length > 0
       ? `/items?owner=${me}&status=${attentionIds.join(",")}`
@@ -194,7 +189,7 @@ export default async function DashboardPage() {
           icon="⏱"
           tone="amber"
           meta={`>${STALE_DAYS} days`}
-          href={mineHref}
+          href={staleHref}
         >
           {stale.length === 0 ? (
             <EmptyState emoji="🎉">
