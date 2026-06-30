@@ -2,6 +2,8 @@
 // Filters live in the URL (shareable) and a saved query simply stores this same
 // flat object as JSON in saved_queries.definition.
 
+import { staleCutoff } from "@/lib/stale";
+
 export type Filters = {
   q: string; // free text over description
   statuses: string[]; // status ids
@@ -12,6 +14,7 @@ export type Filters = {
   labels: string[]; // label ids
   from: string; // target_date >=
   to: string; // target_date <=
+  stale: boolean; // last_activity_at older than STALE_DAYS ("needs an update")
 };
 
 export const EMPTY_FILTERS: Filters = {
@@ -24,6 +27,7 @@ export const EMPTY_FILTERS: Filters = {
   labels: [],
   from: "",
   to: "",
+  stale: false,
 };
 
 type RawParams = Record<string, string | string[] | undefined>;
@@ -48,6 +52,7 @@ export function parseFilters(sp: RawParams): Filters {
     labels: csv(sp.label),
     from: str(sp.from),
     to: str(sp.to),
+    stale: str(sp.stale) === "1",
   };
 }
 
@@ -63,6 +68,7 @@ export function filtersToParams(f: Filters): Record<string, string> {
   if (f.labels.length) p.label = f.labels.join(",");
   if (f.from) p.from = f.from;
   if (f.to) p.to = f.to;
+  if (f.stale) p.stale = "1";
   return p;
 }
 
@@ -89,6 +95,7 @@ export function applyFilters<T extends FilterableQuery>(query: T, f: Filters): T
   if (f.labels.length) q = q.overlaps("label_ids", f.labels) as T;
   if (f.from) q = q.gte("target_date", f.from) as T;
   if (f.to) q = q.lte("target_date", f.to) as T;
+  if (f.stale) q = q.lte("last_activity_at", staleCutoff()) as T;
   return q;
 }
 
