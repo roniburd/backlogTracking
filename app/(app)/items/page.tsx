@@ -47,6 +47,14 @@ export default async function ItemsPage({
   const personal = (saved ?? []).filter((q) => q.scope === "personal");
   const team = (saved ?? []).filter((q) => q.scope === "team");
 
+  // Preserve the current filters/sort so creating an item returns to this view.
+  const viewParams = new URLSearchParams(filtersToParams(filters));
+  if (typeof sp.sort === "string") viewParams.set("sort", sp.sort);
+  if (typeof sp.dir === "string") viewParams.set("dir", sp.dir);
+  const viewQuery = viewParams.toString();
+  const currentView = viewQuery ? `/items?${viewQuery}` : "/items";
+  const newItemHref = `/items/new?from=${encodeURIComponent(currentView)}`;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -54,7 +62,7 @@ export default async function ItemsPage({
           <h1 className="text-[22px] font-bold tracking-tight">Work items</h1>
           <div className="mt-2 h-[3px] w-8 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
         </div>
-        <Button size="sm" render={<Link href="/items/new" />}>
+        <Button size="sm" render={<Link href={newItemHref} />}>
           New item
         </Button>
       </div>
