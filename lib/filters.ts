@@ -95,7 +95,8 @@ export function applyFilters<T extends FilterableQuery>(query: T, f: Filters): T
   if (f.labels.length) q = q.overlaps("label_ids", f.labels) as T;
   if (f.from) q = q.gte("target_date", f.from) as T;
   if (f.to) q = q.lte("target_date", f.to) as T;
-  if (f.stale) q = q.lte("last_activity_at", staleCutoff()) as T;
+  // Strict `<` mirrors the dashboard's isStale so both surface the same set.
+  if (f.stale) q = q.lt("last_activity_at", staleCutoff()) as T;
   return q;
 }
 
@@ -108,4 +109,5 @@ type FilterableQuery = {
   overlaps(column: string, value: readonly string[]): FilterableQuery;
   gte(column: string, value: string): FilterableQuery;
   lte(column: string, value: string): FilterableQuery;
+  lt(column: string, value: string): FilterableQuery;
 };

@@ -56,17 +56,19 @@ describe("applyFilters", () => {
     return { q, calls };
   }
 
-  it("adds a last_activity_at upper bound when stale is set", () => {
+  it("bounds last_activity_at by the stale cutoff (strict <) when stale is set", () => {
     const { q, calls } = recorder();
     applyFilters(q as never, { ...EMPTY_FILTERS, stale: true });
-    const lte = calls.find((c) => c[0] === "lte");
-    expect(lte?.[1]).toBe("last_activity_at");
-    expect(typeof lte?.[2]).toBe("string");
+    const lt = calls.find((c) => c[0] === "lt");
+    expect(lt?.[1]).toBe("last_activity_at");
+    // Cutoff is a recent ISO timestamp; equivalence with isStale is covered in stale.test.ts.
+    expect(typeof lt?.[2]).toBe("string");
+    expect(Number.isNaN(Date.parse(lt?.[2] as string))).toBe(false);
   });
 
   it("does not touch last_activity_at when stale is unset", () => {
     const { q, calls } = recorder();
     applyFilters(q as never, EMPTY_FILTERS);
-    expect(calls.some((c) => c[0] === "lte")).toBe(false);
+    expect(calls.some((c) => c[0] === "lt")).toBe(false);
   });
 });
