@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { AuditTimeline, type TimelineEntry } from "@/components/audit-timeline";
 import { CommentThread, type ThreadComment } from "@/components/comment-thread";
 import { WorkItemForm } from "@/components/work-item-form";
-import { deleteWorkItem, updateWorkItem } from "@/lib/actions/work-items";
+import {
+  deleteWorkItem,
+  duplicateWorkItem,
+  updateWorkItem,
+} from "@/lib/actions/work-items";
 import { getLookups } from "@/lib/data/lookups";
 import { profileName } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -71,12 +75,19 @@ export default async function EditItemPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Edit work item</h1>
-        <Link
-          href="/items"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          Back to items
-        </Link>
+        <div className="flex items-center gap-4">
+          <form action={duplicateWorkItem.bind(null, id)}>
+            <Button type="submit" variant="outline" size="sm">
+              Duplicate
+            </Button>
+          </form>
+          <Link
+            href="/items"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Back to items
+          </Link>
+        </div>
       </div>
 
       <WorkItemForm
