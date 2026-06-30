@@ -83,4 +83,16 @@
       "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
   }
+
+  /*
+   * Native <select> options render in a browser-drawn popup. With a
+   * transparent trigger background the popup inherits inconsistent system
+   * colors, leaving unselected items as near-invisible dark text on dark (see
+   * issue #11). Pin both surfaces to the popover tokens so every option stays
+   * readable. Applies to all native selects in the app.
+   */
+  option {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
+  }
 }
