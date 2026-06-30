@@ -3,6 +3,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FiltersBar } from "@/components/filters-bar";
 import { ItemsTable } from "@/components/items-table";
+import {
+  DownloadCsvButton,
+  SelectionProvider,
+} from "@/components/items-selection";
 import { SavedQueryBar } from "@/components/saved-query-bar";
 import { createClient } from "@/lib/supabase/server";
 import { getLookups } from "@/lib/data/lookups";
@@ -82,20 +86,25 @@ export default async function ItemsPage({
         profiles={lookups.profiles}
       />
 
-      <p className="text-sm text-muted-foreground">
-        {rows?.length ?? 0} item{rows?.length === 1 ? "" : "s"}
-      </p>
+      <SelectionProvider rows={rows ?? []}>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            {rows?.length ?? 0} item{rows?.length === 1 ? "" : "s"}
+          </p>
+          <DownloadCsvButton />
+        </div>
 
-      {!rows?.length ? (
-        <p className="text-sm text-muted-foreground">No items match.</p>
-      ) : (
-        <ItemsTable
-          rows={rows}
-          statuses={lookups.statuses}
-          profiles={lookups.profiles}
-          labels={lookups.labels}
-        />
-      )}
+        {!rows?.length ? (
+          <p className="text-sm text-muted-foreground">No items match.</p>
+        ) : (
+          <ItemsTable
+            rows={rows}
+            statuses={lookups.statuses}
+            profiles={lookups.profiles}
+            labels={lookups.labels}
+          />
+        )}
+      </SelectionProvider>
     </div>
   );
 }
