@@ -138,11 +138,12 @@ export function SelectAllCheckbox() {
 export function DownloadCsvButton() {
   const { rows, selected } = useSelection();
 
+  // Intersect with the current rows: a previously-selected item can drop out of
+  // the view after a filter/sort change, and we must not count or export it.
+  const selectedRows = rows.filter((r) => r.id && selected.has(r.id));
+
   function download() {
-    const chosen =
-      selected.size > 0
-        ? rows.filter((r) => r.id && selected.has(r.id))
-        : rows;
+    const chosen = selectedRows.length > 0 ? selectedRows : rows;
 
     if (chosen.length === 0) {
       toast.warning("No items to download.");
@@ -171,7 +172,7 @@ export function DownloadCsvButton() {
     URL.revokeObjectURL(url);
   }
 
-  const count = selected.size;
+  const count = selectedRows.length;
   return (
     <Button
       variant="outline"
