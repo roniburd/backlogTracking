@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
+  DATE_TYPES,
   OWNER_FIELDS,
   filterLabelSuggestions,
+  isDateType,
   isOwnerField,
 } from "@/lib/inline-edit";
 
@@ -18,6 +20,21 @@ describe("isOwnerField", () => {
     expect(isOwnerField("id")).toBe(false);
     expect(isOwnerField("")).toBe(false);
     expect(isOwnerField("pm_owner; drop table")).toBe(false);
+  });
+});
+
+describe("isDateType", () => {
+  it("accepts each allowed date type", () => {
+    for (const t of DATE_TYPES) expect(isDateType(t)).toBe(true);
+  });
+
+  it("rejects anything outside the allowlist", () => {
+    // The inline date action validates the type against this list before
+    // writing, so unknown codes and injection attempts must be refused.
+    expect(isDateType("dfd")).toBe(false);
+    expect(isDateType("OTHER")).toBe(false);
+    expect(isDateType("")).toBe(false);
+    expect(isDateType("DFD'; drop table")).toBe(false);
   });
 });
 
