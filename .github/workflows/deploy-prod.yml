@@ -30,9 +30,13 @@ jobs:
 
       # 1) Migrations FIRST. Expand/contract migrations mean the currently-live
       #    code keeps working against the new schema during the window.
+      # Pin a concrete CLI version (matches local) — `latest` resolves the newest
+      # release via an unauthenticated GitHub API call, which gets rate-limited on
+      # shared runner IPs and fails the whole deploy. Pinning also keeps prod
+      # deploys reproducible instead of silently upgrading the CLI each run.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.106.0
       - name: Apply database migrations
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
