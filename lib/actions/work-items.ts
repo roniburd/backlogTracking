@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { safeInternalPath } from "@/lib/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
 
 export type ActionState = { error: string } | null;
@@ -92,8 +93,12 @@ export async function createWorkItem(
   const labels = formData.getAll("labels").map(String);
   if (labels.length) await syncLabels(supabase, data.id, labels);
 
+  // Return to where the user started (the table/search view they filtered),
+  // falling back to the items list. `from` is untrusted, so validate it.
+  const from = safeInternalPath(formData.get("from")?.toString(), "/items");
+
   revalidatePath("/items");
-  redirect(`/items/${data.id}`);
+  redirect(from);
 }
 
 export async function updateWorkItem(

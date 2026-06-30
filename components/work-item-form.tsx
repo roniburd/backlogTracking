@@ -64,6 +64,7 @@ export function WorkItemForm({
   labels,
   defaults = {},
   submitLabel = "Save",
+  from,
 }: {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   statuses: Status[];
@@ -71,6 +72,8 @@ export function WorkItemForm({
   labels: LabelRow[];
   defaults?: WorkItemDefaults;
   submitLabel?: string;
+  /** Where to return after a successful submit (e.g. the filtered list view). */
+  from?: string;
 }) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     action,
@@ -80,6 +83,7 @@ export function WorkItemForm({
 
   return (
     <form action={formAction} className="max-w-2xl space-y-5">
+      {from && <input type="hidden" name="from" value={from} />}
       <div className="space-y-1.5">
         <Label htmlFor="description">Description</Label>
         <Textarea
