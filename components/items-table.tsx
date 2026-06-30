@@ -13,6 +13,10 @@ import { InlineDate } from "@/components/inline-date";
 import { InlineLabels } from "@/components/inline-labels";
 import { InlineSelect, type InlineOption } from "@/components/inline-select";
 import { InlineText } from "@/components/inline-text";
+import {
+  RowSelectCheckbox,
+  SelectAllCheckbox,
+} from "@/components/items-selection";
 import { SortHeader } from "@/components/sort-header";
 import { profileName } from "@/lib/format";
 import type { Label, Profile, Status, WorkItemRow } from "@/lib/db";
@@ -72,6 +76,9 @@ export function ItemsTable({
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-10">
+              <SelectAllCheckbox />
+            </TableHead>
             <TableHead className="w-12">
               <SortHeader sortKey="rank" label="#" />
             </TableHead>
@@ -98,6 +105,9 @@ export function ItemsTable({
         <TableBody>
           {rows.map((r) => (
             <TableRow key={r.id}>
+              <TableCell>
+                <RowSelectCheckbox id={r.id!} />
+              </TableCell>
               <TableCell className="text-muted-foreground tabular-nums">
                 {r.stack_rank}
               </TableCell>
