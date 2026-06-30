@@ -89,7 +89,12 @@ export default async function ItemsPage({
       {!rows?.length ? (
         <p className="text-sm text-muted-foreground">No items match.</p>
       ) : (
-        <ItemsTable rows={rows} statuses={lookups.statuses} />
+        <ItemsTable
+          rows={rows}
+          statuses={lookups.statuses}
+          profiles={lookups.profiles}
+          labels={lookups.labels}
+        />
       )}
     </div>
   );

@@ -8,10 +8,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { InlineStatus } from "@/components/inline-status";
+import { InlineLabels } from "@/components/inline-labels";
+import { InlineSelect, type InlineOption } from "@/components/inline-select";
 import { SortHeader } from "@/components/sort-header";
-import { ownerLabel } from "@/lib/format";
-import type { Status, WorkItemRow } from "@/lib/db";
+import { profileName } from "@/lib/format";
+import type { Label, Profile, Status, WorkItemRow } from "@/lib/db";
+import type { OwnerField } from "@/lib/inline-edit";
 
 function fmtDate(d: string | null) {
   if (!d) return "—";
@@ -32,13 +34,45 @@ function relativeDays(iso: string | null) {
   return `${Math.floor(days / 30)} mo ago`;
 }
 
+/** Zip the view's parallel label_ids/label_names arrays back into objects. */
+function rowLabels(r: WorkItemRow): Pick<Label, "id" | "name">[] {
+  const ids = r.label_ids ?? [];
+  const names = r.label_names ?? [];
+  return ids.map((id, i) => ({ id, name: names[i] ?? id }));
+}
+
 export function ItemsTable({
   rows,
   statuses,
+  profiles,
+  labels,
 }: {
   rows: WorkItemRow[];
   statuses: Status[];
+  profiles: Profile[];
+  labels: Label[];
 }) {
+  const statusOptions: InlineOption[] = statuses.map((s) => ({
+    value: s.id,
+    label: s.label,
+    color: s.color,
+  }));
+  const ownerOptions: InlineOption[] = profiles.map((p) => ({
+    value: p.id,
+    label: profileName(p),
+  }));
+
+  const ownerCell = (r: WorkItemRow, field: OwnerField) => (
+    <InlineSelect
+      itemId={r.id!}
+      field={field}
+      value={r[field] ?? ""}
+      options={ownerOptions}
+      placeholder="Unassigned"
+      ariaLabel={field}
+    />
+  );
+
   return (
     <div className="overflow-x-auto rounded-md border">
       <Table>
@@ -87,30 +121,25 @@ export function ItemsTable({
                 )}
               </TableCell>
               <TableCell>
-                <InlineStatus
+                <InlineSelect
                   itemId={r.id!}
-                  statusId={r.status_id}
+                  field="status"
+                  value={r.status_id ?? ""}
+                  options={statusOptions}
+                  placeholder="No status"
+                  ariaLabel="Status"
                   color={r.status_color}
-                  statuses={statuses}
+                  showDot
                 />
               </TableCell>
-              <TableCell
-                className="text-muted-foreground"
-                title={r.pm_email ?? undefined}
-              >
-                {ownerLabel(r.pm_name, r.pm_email)}
+              <TableCell title={r.pm_email ?? undefined}>
+                {ownerCell(r, "pm_owner")}
               </TableCell>
-              <TableCell
-                className="text-muted-foreground"
-                title={r.tech_lead_email ?? undefined}
-              >
-                {ownerLabel(r.tech_lead_name, r.tech_lead_email)}
+              <TableCell title={r.tech_lead_email ?? undefined}>
+                {ownerCell(r, "tech_lead_owner")}
               </TableCell>
-              <TableCell
-                className="text-muted-foreground"
-                title={r.sdm_email ?? undefined}
-              >
-                {ownerLabel(r.sdm_name, r.sdm_email)}
+              <TableCell title={r.sdm_email ?? undefined}>
+                {ownerCell(r, "sdm_owner")}
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {r.target_date ? (
@@ -125,16 +154,11 @@ export function ItemsTable({
                 )}
               </TableCell>
               <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {(r.label_names ?? []).map((name) => (
-                    <span
-                      key={name}
-                      className="rounded-full border px-1.5 py-0.5 text-xs text-muted-foreground"
-                    >
-                      {name}
-                    </span>
-                  ))}
-                </div>
+                <InlineLabels
+                  itemId={r.id!}
+                  selected={rowLabels(r)}
+                  catalog={labels}
+                />
               </TableCell>
               <TableCell
                 className="text-xs text-muted-foreground"

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { isOwnerField, type OwnerField } from "@/lib/inline-edit";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
 import { duplicateWorkItemFields } from "@/lib/work-items";
@@ -44,35 +45,43 @@ function parseFields(formData: FormData) {
   };
 }
 
-/** Sync work_item_labels to exactly `labelIds`, inserting/removing the diff. */
+/**
+ * Sync work_item_labels to exactly `labelIds`, inserting/removing the diff.
+ * Returns an error string if any write failed, so callers can fail loudly
+ * instead of silently dropping a label change.
+ */
 async function syncLabels(
   supabase: Awaited<ReturnType<typeof createClient>>,
   workItemId: string,
   labelIds: string[],
-) {
-  const { data: existing } = await supabase
+): Promise<string | null> {
+  const { data: existing, error: readError } = await supabase
     .from("work_item_labels")
     .select("label_id")
     .eq("work_item_id", workItemId);
+  if (readError) return readError.message;
 
   const current = new Set((existing ?? []).map((r) => r.label_id));
   const next = new Set(labelIds);
 
-  const toAdd = labelIds.filter((id) => !current.has(id));
+  const toAdd = [...next].filter((id) => !current.has(id));
   const toRemove = [...current].filter((id) => !next.has(id));
 
   if (toAdd.length) {
-    await supabase
+    const { error } = await supabase
       .from("work_item_labels")
       .insert(toAdd.map((label_id) => ({ work_item_id: workItemId, label_id })));
+    if (error) return error.message;
   }
   if (toRemove.length) {
-    await supabase
+    const { error } = await supabase
       .from("work_item_labels")
       .delete()
       .eq("work_item_id", workItemId)
       .in("label_id", toRemove);
+    if (error) return error.message;
   }
+  return null;
 }
 
 export async function createWorkItem(
@@ -96,7 +105,10 @@ export async function createWorkItem(
   if (error) return { error: error.message };
 
   const labels = formData.getAll("labels").map(String);
-  if (labels.length) await syncLabels(supabase, data.id, labels);
+  if (labels.length) {
+    const labelError = await syncLabels(supabase, data.id, labels);
+    if (labelError) return { error: labelError };
+  }
 
   // Return to where the user started (the table/search view they filtered),
   // falling back to the items list. `from` is untrusted, so validate it.
@@ -122,7 +134,12 @@ export async function updateWorkItem(
 
   if (error) return { error: error.message };
 
-  await syncLabels(supabase, id, formData.getAll("labels").map(String));
+  const labelError = await syncLabels(
+    supabase,
+    id,
+    formData.getAll("labels").map(String),
+  );
+  if (labelError) return { error: labelError };
 
   revalidatePath("/items");
   revalidatePath(`/items/${id}`);
@@ -179,7 +196,7 @@ export async function duplicateWorkItem(id: string): Promise<void> {
   redirect(`/items/${data.id}`);
 }
 
-/** Inline status change from the table view. */
+/** Inline status change from the table view. Empty string clears the status. */
 export async function setWorkItemStatus(
   id: string,
   statusId: string,
@@ -187,9 +204,52 @@ export async function setWorkItemStatus(
   const supabase = await createClient();
   const { error } = await supabase
     .from("work_items")
-    .update({ status_id: statusId })
+    .update({ status_id: statusId === "" ? null : statusId })
     .eq("id", id);
   if (error) return { error: error.message };
+  revalidatePath("/items");
+  return null;
+}
+
+/**
+ * Inline owner (PM / Tech Lead / SDM) change from the table view. `field` is
+ * validated against an allowlist so an untrusted caller can only ever write one
+ * of the owner columns — never an arbitrary column. Empty string clears it.
+ */
+export async function setWorkItemOwner(
+  id: string,
+  field: OwnerField,
+  ownerId: string,
+): Promise<ActionState> {
+  if (!isOwnerField(field)) return { error: "Invalid field." };
+  const value = ownerId === "" ? null : ownerId;
+  // Explicit per-column update keeps the payload precisely typed (Supabase's
+  // generated types reject a computed key) while `field` stays allowlisted.
+  const update =
+    field === "pm_owner"
+      ? { pm_owner: value }
+      : field === "tech_lead_owner"
+        ? { tech_lead_owner: value }
+        : { sdm_owner: value };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("work_items")
+    .update(update)
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/items");
+  return null;
+}
+
+/** Inline label change from the table view: set the item's labels to `labelIds`. */
+export async function setWorkItemLabels(
+  id: string,
+  labelIds: string[],
+): Promise<ActionState> {
+  const supabase = await createClient();
+  const labelError = await syncLabels(supabase, id, [...new Set(labelIds)]);
+  if (labelError) return { error: labelError };
   revalidatePath("/items");
   return null;
 }
